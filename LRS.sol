@@ -1,5 +1,5 @@
 pragma solidity ^0.4.25;
-contract LRS 
+contract THQBY 
 {
     
    
@@ -252,4 +252,55 @@ contract IRoleBidder is IInitializable
 		function  DoesPlayerHavePrivilageToMoveForward(IPlayer player) public returns(bool);
 
 	}
+	
+	contract ITHQBYPlayerInterface
+    {
+        //starting game
+        function Bid(string memory role, uint bidAmount) public ;
+
+        //accessing 
+        function  getID(uint id) public returns(uint);
+        function  getRole(string memory role) public returns(string memory);
+        function  getChatLog(ChatMessage[] memory msgs) public returns(IChatLog);
+
+        //communicating
+        function  TryChat(string memory message) public returns(bool);
+
+        //action method
+        function  TryVote(uint playerID) public returns(bool);
+
+    }
+    
+    
+    
+    
+    contract ITHQBY_PlayerManager is IPlayerManager
+	{
+		function  GetLivingPolicePlayers() public  returns(IPlayer[] memory);
+		function  GetLivingCitizenPlayers() public returns(IPlayer[] memory);
+		function  GetLivingKillerPlayers() public returns(IPlayer[] memory);
+	}
+	
+	
+	contract ITHQBY_Settings
+	{
+
+
+		function  DAY() public  returns(string memory);
+
+		function  DAY_PK() public  returns(string memory);
+
+		function  NIGHT_KILLER() public  returns(string memory);
+
+		function  NIGHT_POLICE() public  returns(string memory);
+
+
+		function  POLICE() public  returns(string memory);
+		function  CITIZEN() public  returns(string memory);
+		function  KILLER() public  returns(string memory);
+
+	}
+	
+	
+	
 	
