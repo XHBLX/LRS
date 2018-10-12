@@ -19,6 +19,8 @@ contract THQBY
 
 contract IPlayer 
 	{
+	    
+	    function SenderAddress() public returns(address);
 		function  GetVotingWeightAsPercent() public returns(uint);
 		function  GetRole() public returns(string memory);
 		function  GetId() public returns(uint);
@@ -51,11 +53,118 @@ contract IPlayer
 	}
 
 
+
+contract ParticipatableBase is IParticipatable
+{
+    	 IPlayer[] internal _players;
+		 mapping(address => bool) internal  _canParticipate;
+
+    
+    
+    function  GetParticipants() public returns(IPlayer[] memory)
+    {
+        return _players;
+    }
+		function  EnableParticipant(IPlayer player)  public 
+		{
+		    _canParticipate[player.SenderAddress()] = true;
+		}
+		function  DisableParticipant(IPlayer player) public 
+		{
+		    _canParticipate[player.SenderAddress()] = false;
+		}
+		function  DisableAllParticipants() public 
+		{
+		    SetAllParticibility(false);
+		}
+		function  EnableAllParticipants() public 
+		{
+		    SetAllParticibility(true);
+		}
+		
+		function  SetAllParticibility(bool canParticipate) private
+		{
+			for (uint i = 0; i < _players.length; i++)
+			{
+				_canParticipate[_players[i].SenderAddress()] = canParticipate;
+			}
+
+
+		}
+		
+		function  IInitializable(IPlayer[] memory players) public 
+		{
+		    _players = players;
+
+			EnableAllParticipants();
+		}
+		
+
+		function  IsRegisteredParticipant(IPlayer player) public  returns(bool)
+		{
+		  //  return _players.Contains(player);
+		  for (uint i = 0; i< _players.length; i++)
+		  {
+		      if    (_players[i]==player)
+		        {return true;}
+		  }
+		  return false;
+		}
+		function  CanParticipate(IPlayer player) public  returns(bool)
+		{
+		    if (!IsRegisteredParticipant(player))
+			{
+				return false;
+			}
+
+			return _canParticipate[player.SenderAddress()];
+		}
+		function  ParticipatablePlayersCount()  public returns(uint)
+		{
+		    uint ans = 0;
+
+			for (uint i = 0; i < _players.length; i++)
+			{
+				if (CanParticipate(_players[i]))
+				{
+					ans++;
+				}
+			}
+
+			return ans;
+		}
+}
+
 contract IClock
 	{
 		function  GetNth_day() public returns(uint);
 		function  DayPlusPlus() public ;
 	function  GetRealTimeInSeconds() public returns(uint);
+	}
+
+contract Clock
+	{
+	    uint _day = 0;
+
+		uint _realTimeInSeconds = 0;
+
+	
+		function  GetNth_day() public returns(uint)
+		{
+		    return _day;
+		}
+		
+		function  DayPlusPlus() public 
+		{
+		    _day++;
+		}
+	function  GetRealTimeInSeconds() public returns(uint)
+	{
+	    return now;
+	}
+	
+	
+	
 	}
 
 
@@ -104,14 +213,106 @@ contract ChatMessage
 
 	}
 	
+	
+	
+	contract TimeLimitable is IClock, ITimeLimitable
+	{
+	    
+	    
+	    IClock _clock;
+
+
+
+        constructor(IClock clock) public
+        {
+            _clock = clock;
+        }
+
+        uint _startingTimeInSeconds;
+        uint _timeLimitInSeconds;
+
+
+function  GetNth_day() public returns(uint)
+		{
+		    return _clock.GetNth_day();
+		}
+		
+		function  DayPlusPlus() public 
+		{
+		   _clock.DayPlusPlus();
+		}
+	function  GetRealTimeInSeconds() public returns(uint)
+	{
+	    return _clock.GetRealTimeInSeconds();
+	}
+	
+
+       
+
+       
+
+      
+
+       
+
+
+      
+
+		function  IsOverTime() public returns(bool)
+		{
+		    return GetRealTimeInSeconds() >= _startingTimeInSeconds + _timeLimitInSeconds;
+		}
+		function  SetTimeLimit(uint secondss) public 
+		{
+		    _timeLimitInSeconds = secondss;
+		}
+		function  IncrementTimeLimit(int secondss) public 
+		{
+		    if (secondss < 0)
+            {
+                int temp=int(_timeLimitInSeconds);
+                if (-secondss > temp)
+                {
+                    _timeLimitInSeconds = 0;
+                    return;
+                }
+            }
+
+
+            _timeLimitInSeconds = uint(int(_timeLimitInSeconds) + secondss);
+		}
+		function  SetTimerOn() public 
+		{
+		    _startingTimeInSeconds = _clock.GetRealTimeInSeconds();
+		}
+
+	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 		contract ITimeLimitForwardable is ITimeLimitable
 	{
-		
-
-
 
 		function  TryMoveForward(IPlayer player) public returns(bool);
 	}
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
+	
 	
 	
 
@@ -120,6 +321,16 @@ contract ChatMessage
 	{
 		function WhoDidThePlayerVote(IPlayer player) public  returns(IPlayer);
 	}
+
+
+
+
+
+
+
+
+
+
 
 
 contract IBallot is IVoteHistory, IParticipatable
@@ -136,10 +347,82 @@ contract IBallot is IVoteHistory, IParticipatable
 	}
 
 
+
+//this class is unfinished...!!!!!!!!!!
+contract Ballot is IBallot, ParticipatableBase
+{
+    mapping(address=>IPlayer)  _playerVotedwho;
+
+mapping(address=> uint)	 _votesReceivedByPlayer;
+
+		IPlayerManager _playerManager;
+    
+    constructor (IPlayerManager playerManager) public
+    {
+        _playerManager=playerManager;
+    }
+    
+    function Initialize(IPlayer[] participants)
+    {
+        base.Initialize(participants);
+			_playerVotedwho = new Dictionary<IPlayer, IPlayer>();
+			_votesReceivedByPlayer = new Dictionary<IPlayer, uint>();
+			var allplayers = _playerManager.GetAllPlayers();
+			for (int i = 0; i < allplayers.Length; i++)
+			{
+				_votesReceivedByPlayer[allplayers[i]] = 0;
+				_playerVotedwho[allplayers[i]] = null;
+			}
+    }
+    
+    
+    
+    
+    
+    	function DidVote(IPlayer player) public  returns(bool);
+		function TryVote(IPlayer byWho, IPlayer toWho) public returns(bool);
+		
+		function GetWinners() public returns(IPlayer[] memory);
+
+		function IsSoloWinder() public returns(bool);
+		function IsZeroWinders() public returns(bool);
+		function IsEveryVotableOnesVoted() public returns(bool);
+
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 contract IChatable
 	{
 		function  TryChat(IPlayer player, string memory message) public returns(bool);
 	}
+
+
+
+
+
+
+
+
+
+
 
 contract IChatLog is  IParticipatable, IChatable
 	{
@@ -150,6 +433,109 @@ contract IChatLog is  IParticipatable, IChatable
 
 		function  PrintSystemMessage(string memory message ) public ;
 	}
+	
+
+	
+	contract ChatLog is ParticipatableBase , IChatLog
+	{
+		ChatMessage[] _messages;
+		uint _messageCount = 0;
+
+		IClock _clock;
+		constructor(IClock clock) public
+		{
+			_clock = clock;
+			//_messages = new List<ChatMessage>();
+			_messageCount=0;
+		}
+
+		
+
+	
+
+		function  TryChat(IPlayer player, string memory message) public returns(bool)
+		{
+			if (!CanParticipate(player))
+			{
+				return false;
+			}
+
+
+			ChatMessage chatMessage = new ChatMessage(GetTimeAsSeconds(),int(player.GetId()), message);
+
+
+			PushMessage(chatMessage);
+
+			return true;
+		}
+
+
+
+
+
+		function GetTimeAsSeconds() private returns(uint) 
+		{
+			return _clock.GetRealTimeInSeconds();
+		}
+
+		function GetAllMessages() public returns(ChatMessage[] memory)
+		{
+			return _messages;
+		}
+
+		function  GetNewestMessage() public returns(ChatMessage )
+		{
+			return _messages[uint(_messageCount - 1)];
+		}
+
+		function  PrintSystemMessage(string memory message ) public
+		{
+			ChatMessage chatMessage = new ChatMessage(GetTimeAsSeconds(),-1,message);
+
+		
+
+			PushMessage(chatMessage);
+		}
+
+
+		function PushMessage(ChatMessage message) private
+		{
+			_messages.push(message);
+
+			_messageCount++;
+		}
+	    
+	    
+	    
+	    
+	    
+		
+		
+
+
+
+		 
+	}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 	contract IChatter is IChatLog, ITimeLimitable, IInitializableIPlayerArr
 	{
