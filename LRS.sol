@@ -1,5 +1,5 @@
 /*
-* OOP implementation of THQBY in Solidity
+* OOP implementation of LRS in Solidity
 */
 pragma solidity ^0.4.25;
 //pragma experimental ABIEncoderV2;
@@ -204,10 +204,10 @@ contract ISceneManagerFriendToScene is ISceneManager
 }
 
 
-contract ITHQBYPlayerInterface
+contract ILRSPlayerInterface
 {
     //starting game
-    function Bid(uint pliceAmount, uint KillerAmount, uint citizenAmount) public;
+    function Bid(uint pliceAmount, uint WolfAmount, uint citizenAmount) public;
     //accessing 
     function getID(uint id) public returns(uint);
     function getRole() public returns(string memory);
@@ -219,23 +219,23 @@ contract ITHQBYPlayerInterface
 }
 
 
-contract ITHQBY_PlayerManager is IPlayerManager
+contract ILRS_PlayerManager is IPlayerManager
 {
-    function GetLivingPolicePlayers() public returns(IPlayer[] memory);
+    function GetLivingProphetPlayers() public returns(IPlayer[] memory);
     function GetLivingCitizenPlayers() public returns(IPlayer[] memory);
-    function GetLivingKillerPlayers() public returns(IPlayer[] memory);
+    function GetLivingWolfPlayers() public returns(IPlayer[] memory);
 }
 
 
-contract ITHQBY_Settings
+contract ILRS_Settings
 {
     function  DAY() public  returns(string memory);
     function  DAY_PK() public  returns(string memory);
-    function  NIGHT_KILLER() public  returns(string memory);
-    function  NIGHT_POLICE() public  returns(string memory);
-    function  POLICE() public  returns(string memory);
+    function  NIGHT_Wolf() public  returns(string memory);
+    function  NIGHT_Prophet() public  returns(string memory);
+    function  Prophet() public  returns(string memory);
     function  CITIZEN() public  returns(string memory);
-    function  KILLER() public  returns(string memory);
+    function  Wolf() public  returns(string memory);
 }
 
 
@@ -290,7 +290,7 @@ contract ISequentialChatter is IChatter//, ITimeLimitForwardable
 
 
 
-contract THQBY_Settings is ITHQBY_Settings
+contract LRS_Settings is ILRS_Settings
 {
     constructor() public
     {
@@ -311,24 +311,36 @@ contract THQBY_Settings is ITHQBY_Settings
         return "DAY_PK";
     }
 
-    function KILLER() public returns(string memory )
+    function Wolf() public returns(string memory )
     {
-        return "KILLER";
+        return "Wolf";
     }
 
-    function NIGHT_KILLER() public returns(string memory )
+
+    function Witch() public returns(string memory )
     {
-        return "NIGHT_KILLER";
+        return "Witch";
     }
 
-    function NIGHT_POLICE() public returns(string memory )
+
+    function Hunter() public returns(string memory )
     {
-        return "NIGHT_POLICE";
+        return "Hunter";
     }
 
-    function POLICE() public returns(string memory )
+    function NIGHT_Wolf() public returns(string memory )
     {
-        return "POLICE";
+        return "NIGHT_Wolf";
+    }
+
+    function NIGHT_Prophet() public returns(string memory )
+    {
+        return "NIGHT_Prophet";
+    }
+
+    function Prophet() public returns(string memory )
+    {
+        return "Prophet";
     }
 
 
@@ -358,9 +370,9 @@ contract IDependencyInjection
     function ChatterFactory() public returns(IChatter);
     function ClockFactory() public returns(IClock);
     function PlayerFactoryFactory() public returns(IPlayerFactory);
-    function PlayerManager() public returns(ITHQBY_PlayerManager);
+    function PlayerManager() public returns(ILRS_PlayerManager);
     //IScene SceneFactory(string name); 
-    function SettingsFactory() public returns(ITHQBY_Settings);
+    function SettingsFactory() public returns(ILRS_Settings);
     function SceneManagerFactory() public returns(ISceneManager);
     function ParticipatableFactory() public returns(IParticipatable);
     function RoleBidderFactory() public returns(IRoleBidder);
@@ -368,8 +380,8 @@ contract IDependencyInjection
     function TimeLimitableFactory() public returns(ITimeLimitable);
     function SceneDAYFactory() public returns(SceneDAY);
     function SceneDAY_PKFactory() public returns(SceneDAY_PK);
-    function NIGHT_POLICE_Factory() public returns(SceneNIGHT_POLICE);
-    function NIGHT_KILLER_Factory() public returns(SceneNIGHT_KILLER);
+    function NIGHT_Prophet_Factory() public returns(SceneNIGHT_Prophet);
+    function NIGHT_Wolf_Factory() public returns(SceneNIGHT_Wolf);
     function Initialize() public;
     function LateInitiizeAfterRoleBide() public;
 }
@@ -486,7 +498,7 @@ contract RoleBidderBase is IRoleBidder
         for (uint j = 0; j < totalIteration; j++) {
             int  tempMax = -1;
             uint tempID = 2**256-1;
-            curRoleIndex = j % _numRoles; // //0->police; 1->citi; 2->killer
+            curRoleIndex = j % _numRoles; // //0->Prophet; 1->citi; 2->Wolf
             if (numRoleAssigned[curRoleIndex] >= _spotsOfRole[_roleIndx2String[int(curRoleIndex)]]) {
                 continue;
             }
@@ -720,12 +732,12 @@ IPlayer[] players;
 }
 
 
-contract THQBYRoleBidder is RoleBidderBase
+contract LRSRoleBidder is RoleBidderBase
 {
-    ITHQBY_Settings _settings;
+    ILRS_Settings _settings;
     StrArr       stra;
 
-    constructor(ITHQBY_Settings settings, IPlayerFactory PlayerFactory)  RoleBidderBase(PlayerFactory)   public
+    constructor(ILRS_Settings settings, IPlayerFactory PlayerFactory)  RoleBidderBase(PlayerFactory)   public
     {
 //      _playerFactory = PlayerFactory;
         _settings = settings;
@@ -734,9 +746,9 @@ contract THQBYRoleBidder is RoleBidderBase
 
     function InitRoles() internal 
     {
-        stra.PushStr(_settings.POLICE());
+        stra.PushStr(_settings.Prophet());
         stra.PushStr(_settings.CITIZEN());
-        stra.PushStr(_settings.KILLER());
+        stra.PushStr(_settings.Wolf());
     
         Initialize(stra);
         SetPlayersCount(12);
@@ -744,9 +756,9 @@ contract THQBYRoleBidder is RoleBidderBase
 
     function SetSpotsOfRoles() internal
     {   
-        _spotsOfRole[_settings.POLICE()]= 4;
+        _spotsOfRole[_settings.Prophet()]= 4;
         _spotsOfRole[_settings.CITIZEN()] =4;
-        _spotsOfRole[_settings.KILLER()] =4;
+        _spotsOfRole[_settings.Wolf()] =4;
     }
     
     function Initialize() public
@@ -757,9 +769,9 @@ contract THQBYRoleBidder is RoleBidderBase
 }
 
 
-contract THQBY_PLayer is Player
+contract LRS_PLayer is Player
 {
-    constructor(ITHQBY_Settings settings, address addresss) Player(addresss) public
+    constructor(ILRS_Settings settings, address addresss) Player(addresss) public
     {
     }
     
@@ -767,31 +779,31 @@ contract THQBY_PLayer is Player
 }
 
 
-contract Police is THQBY_PLayer
+contract Prophet is LRS_PLayer
 {
-    constructor(ITHQBY_Settings settings, address addresss) THQBY_PLayer(settings,addresss) public
+    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
     {
-        // base(settings) from THQBY_PLayer
-        _role = settings.POLICE();
+        // base(settings) from LRS_PLayer
+        _role = settings.Prophet();
     }
 }
 
 
-contract Killer is THQBY_PLayer
+contract Wolf is LRS_PLayer
 {
-    constructor(ITHQBY_Settings settings, address addresss) THQBY_PLayer(settings,addresss) public
+    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
     {
-        // base(settings) from THQBY_PLayer
-        _role = settings.KILLER();
+        // base(settings) from LRS_PLayer
+        _role = settings.Wolf();
     }
 }
 
 
-contract Citizen is THQBY_PLayer
+contract Citizen is LRS_PLayer
 {
-    constructor(ITHQBY_Settings settings, address addresss) THQBY_PLayer(settings,addresss) public
+    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
     {
-        // base(settings) from THQBY_PLayer
+        // base(settings) from LRS_PLayer
         _role = settings.CITIZEN();
     }
 }
@@ -1133,7 +1145,7 @@ contract Scene is ITimeLimitable, IScene, IPrivateScene
     IBallot                    _ballot;
     IChatter                   _chatter;
     ITimeLimitable             _timeLimitable;
-    ITHQBY_Settings            _settings;
+    ILRS_Settings            _settings;
     ISceneManagerFriendToScene _sceneManager;
     string                     _sceneName;
 
@@ -1141,7 +1153,7 @@ contract Scene is ITimeLimitable, IScene, IPrivateScene
     event                      movedForward(string);
     event                      print(string);
 
-    constructor(IBallot ballot, IChatter chatter, ITimeLimitable timeLimitable, ITHQBY_Settings settings)
+    constructor(IBallot ballot, IChatter chatter, ITimeLimitable timeLimitable, ILRS_Settings settings)
     public
     {
         _ballot = ballot;
@@ -1303,16 +1315,16 @@ contract Scene is ITimeLimitable, IScene, IPrivateScene
 }
 
 
-contract THQBY_Scene is Scene
+contract LRS_Scene is Scene
 {
     SceneDAY          _sceneDay;
     SceneDAY_PK       _scenePK;
-    SceneNIGHT_KILLER _sceneKiller;
-    SceneNIGHT_POLICE _scecenPOLICE;
+    SceneNIGHT_Wolf _sceneWolf;
+    SceneNIGHT_Prophet _scecenProphet;
     constructor (IBallot ballot
         , IChatter chatter
         , ITimeLimitable timeLimitable
-        , ITHQBY_Settings settings) Scene(ballot, chatter, timeLimitable, settings)
+        , ILRS_Settings settings) Scene(ballot, chatter, timeLimitable, settings)
     public
     {
 //      _ballot = ballot;
@@ -1332,14 +1344,14 @@ contract THQBY_Scene is Scene
         _scenePK = scenePK;
     }
 
-    function Set_sceneKiller(SceneNIGHT_KILLER sceneKiller) public
+    function Set_sceneWolf(SceneNIGHT_Wolf sceneWolf) public
     {
-        _sceneKiller = sceneKiller;
+        _sceneWolf = sceneWolf;
     }
 
-    function Set_scecenPOLICE(SceneNIGHT_POLICE scecenPOLICE) public
+    function Set_scecenProphet(SceneNIGHT_Prophet scecenProphet) public
     {
-        _scecenPOLICE = scecenPOLICE;
+        _scecenProphet = scecenProphet;
     }
 
     function DoesPlayerHavePrivilageToMoveForward(IPlayer player) public returns (bool)
@@ -1355,14 +1367,14 @@ contract THQBY_Scene is Scene
 }
 
 
-contract SceneDAY is THQBY_Scene
+contract SceneDAY is LRS_Scene
 {
     
     
     constructor (IBallot ballot
         , IChatter chatter
         , ITimeLimitable timeLimitable
-        , ITHQBY_Settings settings) THQBY_Scene(ballot, chatter, timeLimitable, settings)
+        , ILRS_Settings settings) LRS_Scene(ballot, chatter, timeLimitable, settings)
     public
     {
 //      _ballot = ballot;
@@ -1387,28 +1399,28 @@ contract SceneDAY is THQBY_Scene
     function OneVotingResultHandler(IPlayer result) public
     {
         KillSomebody(result);
-        GotoKillerScene();
+        GotoWolfScene();
     }
 
-    function GotoKillerScene() private
+    function GotoWolfScene() private
     {
-        _sceneManager.MoveForwardToNewScene(_sceneKiller);
+        _sceneManager.MoveForwardToNewScene(_sceneWolf);
     }
 
     function ZeroVotingResultHandler() public 
     {
-        GotoKillerScene();
+        GotoWolfScene();
     }
 
 }
 
 
-contract SceneDAY_PK is THQBY_Scene
+contract SceneDAY_PK is LRS_Scene
 {
     constructor (IBallot ballot
         , IChatter chatter
         , ITimeLimitable timeLimitable
-        , ITHQBY_Settings settings) THQBY_Scene(ballot, chatter, timeLimitable, settings)
+        , ILRS_Settings settings) LRS_Scene(ballot, chatter, timeLimitable, settings)
     public
     {
 //      _ballot = ballot;
@@ -1420,63 +1432,63 @@ contract SceneDAY_PK is THQBY_Scene
 
     function MoreVotingResultHandler(IPlayer[] memory result) public
     {
-        GotoKillerScene();
+        GotoWolfScene();
     }
 
     function OneVotingResultHandler(IPlayer result) public
     {
         KillSomebody(result);
-        GotoKillerScene();
+        GotoWolfScene();
     }
 
     function ZeroVotingResultHandler() public 
     {
-        GotoKillerScene();
+        GotoWolfScene();
     }
 
-    function GotoKillerScene() private
+    function GotoWolfScene() private
     {
-        _sceneManager.MoveForwardToNewScene(_sceneKiller);
+        _sceneManager.MoveForwardToNewScene(_sceneWolf);
     }
 
 }
 
 
-contract SceneNIGHT_KILLER is THQBY_Scene
+contract SceneNIGHT_Wolf is LRS_Scene
 {
     constructor (IBallot ballot
         , IChatter chatter
         , ITimeLimitable timeLimitable
-        , ITHQBY_Settings settings) THQBY_Scene(ballot, chatter, timeLimitable, settings)
+        , ILRS_Settings settings) LRS_Scene(ballot, chatter, timeLimitable, settings)
     public
     {
 //      _ballot = ballot;
 //      _chatter = chatter;
 //      _timeLimitable = timeLimitable;
 //      _settings = settings;
-_sceneName=_settings.NIGHT_KILLER();
+_sceneName=_settings.NIGHT_Wolf();
     }
 
     function MoreVotingResultHandler(IPlayer[] memory result) public
     {
-        GotoKillerScene();
+        GotoWolfScene();
     }
 
     function OneVotingResultHandler(IPlayer result) public
     {
         KillSomebody(result);
         _sceneDay.KillSomebody(result);
-        GotoKillerScene();
+        GotoWolfScene();
     }
 
     function ZeroVotingResultHandler() public 
     {
-        GotoKillerScene();
+        GotoWolfScene();
     }
 
-    function GotoKillerScene() private
+    function GotoWolfScene() private
     {
-        _sceneManager.MoveForwardToNewScene(_sceneKiller);
+        _sceneManager.MoveForwardToNewScene(_sceneWolf);
     }
 
     function Refresh() public
@@ -1489,19 +1501,19 @@ _sceneName=_settings.NIGHT_KILLER();
 }
 
 
-contract SceneNIGHT_POLICE is THQBY_Scene
+contract SceneNIGHT_Prophet is LRS_Scene
 {
     constructor (IBallot ballot
         , IChatter chatter
         , ITimeLimitable timeLimitable
-        , ITHQBY_Settings settings) THQBY_Scene(ballot, chatter, timeLimitable, settings)
+        , ILRS_Settings settings) LRS_Scene(ballot, chatter, timeLimitable, settings)
     public
     {
 //      _ballot = ballot;
 //      _chatter = chatter;
 //      _timeLimitable = timeLimitable;
 //      _settings = settings;
-_sceneName=_settings.NIGHT_POLICE();
+_sceneName=_settings.NIGHT_Prophet();
     }
 
     function GotoDayScene() public
@@ -1848,16 +1860,16 @@ contract SequentialChatter is Chatter, ISequentialChatter
 
 contract DependencyInjection is IDependencyInjection
 {
-    ITHQBY_PlayerManager           _playerManager;
+    ILRS_PlayerManager           _playerManager;
     IClock                         _clock;
-    SceneNIGHT_KILLER              _sceneNIGHT_KILLER;
-    SceneNIGHT_POLICE              _sceneNIGHT_POLICE;
+    SceneNIGHT_Wolf              _sceneNIGHT_Wolf;
+    SceneNIGHT_Prophet              _sceneNIGHT_Prophet;
     IPlayerFactory                 _playerfact;
     IRoleBidder                    _roleBidder;
     SceneDAY                       _sceneDAY;
     SceneDAY_PK                    _sceneDAY_PK;
     ISceneManager                  _sceneManager;
-    ITHQBY_Settings                _tHQBY_Settings;
+    ILRS_Settings                _LRS_Settings;
 
 
     // For game play
@@ -1866,14 +1878,14 @@ contract DependencyInjection is IDependencyInjection
 
 
 
-THQBY_Scene private scn;//helper
+LRS_Scene private scn;//helper
 
 function InitSceneHelper() private
 {
-            scn.Set_scecenPOLICE(_sceneNIGHT_POLICE);
+            scn.Set_scecenProphet(_sceneNIGHT_Prophet);
             scn.Set_sceneDay(_sceneDAY);
             scn.Set_scenePK(_sceneDAY_PK);
-            scn.Set_sceneKiller(_sceneNIGHT_KILLER);
+            scn.Set_sceneWolf(_sceneNIGHT_Wolf);
 }
 
 
@@ -1882,16 +1894,16 @@ function InitSceneHelper() private
             IBallot ballot = BallotFactory();
             IChatter chatter = ChatterFactory();
             ITimeLimitable timeLimitable = TimeLimitableFactory();
-            ITHQBY_Settings settings = SettingsFactory();
-            _sceneNIGHT_KILLER = new SceneNIGHT_KILLER(ballot, chatter, timeLimitable, settings);
-               _sceneNIGHT_POLICE = new SceneNIGHT_POLICE(ballot, chatter, timeLimitable, settings);
+            ILRS_Settings settings = SettingsFactory();
+            _sceneNIGHT_Wolf = new SceneNIGHT_Wolf(ballot, chatter, timeLimitable, settings);
+               _sceneNIGHT_Prophet = new SceneNIGHT_Prophet(ballot, chatter, timeLimitable, settings);
                _sceneDAY = new SceneDAY(ballot, chatter, timeLimitable, settings);
             _sceneDAY_PK = new SceneDAY_PK(ballot, chatter, timeLimitable, settings);
             
            
-            scn=_sceneNIGHT_KILLER;
+            scn=_sceneNIGHT_Wolf;
             InitSceneHelper();
-            scn=_sceneNIGHT_POLICE;
+            scn=_sceneNIGHT_Prophet;
             InitSceneHelper();
             scn=_sceneDAY;
             InitSceneHelper();
@@ -1951,19 +1963,19 @@ function InitSceneHelper() private
     }
 
     //AsSingle
-    function NIGHT_KILLER_Factory() public returns(SceneNIGHT_KILLER)
+    function NIGHT_Wolf_Factory() public returns(SceneNIGHT_Wolf)
     {
         
-        return _sceneNIGHT_KILLER;
+        return _sceneNIGHT_Wolf;
     }
 
     //AsSingle
-    function NIGHT_POLICE_Factory() public returns(SceneNIGHT_POLICE)
+    function NIGHT_Prophet_Factory() public returns(SceneNIGHT_Prophet)
     {
        
          
         
-        return _sceneNIGHT_POLICE;
+        return _sceneNIGHT_Prophet;
     }
 
     //AsTransient
@@ -1977,19 +1989,19 @@ function InitSceneHelper() private
     {
         if (address(_playerfact) == address(0x0))
         {
-            ITHQBY_Settings settings = SettingsFactory();
-            _playerfact = new THQBY_PlayerFactory(settings);
+            ILRS_Settings settings = SettingsFactory();
+            _playerfact = new LRS_PlayerFactory(settings);
         }
         return _playerfact;
     }
 
     //AsTransient
-    function PlayerManager() public returns(ITHQBY_PlayerManager)
+    function PlayerManager() public returns(ILRS_PlayerManager)
     {
         if (address(_playerManager) == address(0x0))
         {
-            ITHQBY_Settings settings = SettingsFactory();
-            _playerManager = new THQBY_PlayerManager(settings);
+            ILRS_Settings settings = SettingsFactory();
+            _playerManager = new LRS_PlayerManager(settings);
         }
         return _playerManager;
     }
@@ -2000,8 +2012,8 @@ function InitSceneHelper() private
         if (address(_roleBidder) == address(0x0))
         {
             IPlayerFactory playerFactory = PlayerFactoryFactory();
-            ITHQBY_Settings settings = SettingsFactory();
-            _roleBidder = new THQBYRoleBidder(settings, playerFactory);
+            ILRS_Settings settings = SettingsFactory();
+            _roleBidder = new LRSRoleBidder(settings, playerFactory);
         }
         return _roleBidder;
     }
@@ -2027,22 +2039,22 @@ function InitSceneHelper() private
         {
             SceneDAY sceneDay = SceneDAYFactory();
             SceneDAY_PK scenePK = SceneDAY_PKFactory();
-            SceneNIGHT_KILLER sceneNIGHT_KILLER = NIGHT_KILLER_Factory();
-            SceneNIGHT_POLICE sceneNIGHT_POLICE = NIGHT_POLICE_Factory();
-            ITHQBY_PlayerManager playerManager = PlayerManager();
-            _sceneManager = new THQBY_SceneManager(sceneDay, scenePK, sceneNIGHT_KILLER, sceneNIGHT_POLICE, playerManager);
+            SceneNIGHT_Wolf sceneNIGHT_Wolf = NIGHT_Wolf_Factory();
+            SceneNIGHT_Prophet sceneNIGHT_Prophet = NIGHT_Prophet_Factory();
+            ILRS_PlayerManager playerManager = PlayerManager();
+            _sceneManager = new LRS_SceneManager(sceneDay, scenePK, sceneNIGHT_Wolf, sceneNIGHT_Prophet, playerManager);
         }
         return _sceneManager;
     }
 
     //AsSingle
-    function SettingsFactory() public returns(ITHQBY_Settings)
+    function SettingsFactory() public returns(ILRS_Settings)
     {
-        if (address(_tHQBY_Settings) ==address(0x0))
+        if (address(_LRS_Settings) ==address(0x0))
         {
-            _tHQBY_Settings = new THQBY_Settings();
+            _LRS_Settings = new LRS_Settings();
         }
-        return _tHQBY_Settings;
+        return _LRS_Settings;
     }
 
     //AsTransient
@@ -2054,7 +2066,7 @@ function InitSceneHelper() private
 
     /*
     //AsTransient
-    function tHQBYPlayerInterfaceFactory(uint id) returns (THQBYPlayerInterface)
+    function LRSPlayerInterfaceFactory(uint id) returns (LRSPlayerInterface)
     {
 
     }
@@ -2113,7 +2125,7 @@ function InitSceneHelper() private
 
 //  function RoleToNum(string memory role) private returns(uint)
 //  {
-//      if (role == "POLICE")
+//      if (role == "Prophet")
 //      { //DRY
 //          return 0;
 //      }
@@ -2134,15 +2146,15 @@ function InitSceneHelper() private
 // }
 
 
-//////////////// THQBY specific code //////////////
+//////////////// LRS specific code //////////////
 
 
-contract THQBY_PlayerFactory is PlayerFactoryBase
+contract LRS_PlayerFactory is PlayerFactoryBase
 {
-    ITHQBY_Settings _settings;
+    ILRS_Settings _settings;
 
     //mannually DI
-    constructor(ITHQBY_Settings settings)   PlayerFactoryBase() public
+    constructor(ILRS_Settings settings)   PlayerFactoryBase() public
     {
         _settings = settings;
     }
@@ -2154,13 +2166,13 @@ contract THQBY_PlayerFactory is PlayerFactoryBase
         {
             ans = new Citizen(_settings,addrs);
         }
-        else if ( keccak256(role) ==  keccak256(_settings.KILLER()))
+        else if ( keccak256(role) ==  keccak256(_settings.Wolf()))
         {
-            ans = new Killer(_settings,addrs);
+            ans = new Wolf(_settings,addrs);
         }
-        else if ( keccak256(role) ==  keccak256(_settings.POLICE()))
+        else if ( keccak256(role) ==  keccak256(_settings.Prophet()))
         {
-            ans = new Police(_settings,addrs);
+            ans = new Prophet(_settings,addrs);
         }
         else {
             revert("no such role");
@@ -2175,11 +2187,11 @@ contract THQBY_PlayerFactory is PlayerFactoryBase
 
 
 
-contract THQBY_PlayerManager is PlayerManager, ITHQBY_PlayerManager
+contract LRS_PlayerManager is PlayerManager, ILRS_PlayerManager
 {
-    ITHQBY_Settings _names;
+    ILRS_Settings _names;
 
-    constructor(ITHQBY_Settings settings) public
+    constructor(ILRS_Settings settings) public
     {
         _names = settings;
     }
@@ -2189,36 +2201,36 @@ contract THQBY_PlayerManager is PlayerManager, ITHQBY_PlayerManager
         return FindByRole(_names.CITIZEN());
     }
 
-    function GetLivingKillerPlayers() public returns (IPlayer[] memory )
+    function GetLivingWolfPlayers() public returns (IPlayer[] memory )
     {
-        return FindByRole(_names.KILLER());
+        return FindByRole(_names.Wolf());
     }
 
-    function GetLivingPolicePlayers() public returns (IPlayer[] memory )
+    function GetLivingProphetPlayers() public returns (IPlayer[] memory )
     {
-        return FindByRole(_names.POLICE());
+        return FindByRole(_names.Prophet());
     }   
 
 }
 
 
 
-contract THQBY_SceneManager is SceneManagerBase
+contract LRS_SceneManager is SceneManagerBase
 {
     SceneDAY _sceneDay;
 
     constructor(SceneDAY sceneDay
         , SceneDAY_PK scenePK
-        , SceneNIGHT_KILLER sceneNIGHT_KILLER
-        , SceneNIGHT_POLICE sceneNIGHT_POLICE
-        , ITHQBY_PlayerManager playerManager) 
+        , SceneNIGHT_Wolf sceneNIGHT_Wolf
+        , SceneNIGHT_Prophet sceneNIGHT_Prophet
+        , ILRS_PlayerManager playerManager) 
     public
     {
         _sceneDay = sceneDay;
         sceneDay.Initialize(this, playerManager.GetAllPlayers());
         scenePK.Initialize(this, playerManager.GetAllPlayers());
-        sceneNIGHT_KILLER.Initialize(this, playerManager.GetLivingKillerPlayers());
-        sceneNIGHT_POLICE.Initialize(this, playerManager.GetLivingPolicePlayers());
+        sceneNIGHT_Wolf.Initialize(this, playerManager.GetLivingWolfPlayers());
+        sceneNIGHT_Prophet.Initialize(this, playerManager.GetLivingProphetPlayers());
     }
 
     function Initialize() public 
@@ -2239,17 +2251,17 @@ contract THQBY_SceneManager is SceneManagerBase
 */
 
 
-contract Main //is ITHQBYPlayerInterface 
+contract Main //is ILRSPlayerInterface 
 {
     IDependencyInjection          _inject;
-    THQBYRoleBidder               _roleBidder;
-    THQBY_SceneManager            _sceneManager;
-    IPlayer[]                _tHQBY_PLayers;
-    ITHQBY_Settings               _settings;
+    LRSRoleBidder               _roleBidder;
+    LRS_SceneManager            _sceneManager;
+    IPlayer[]                _LRS_PLayers;
+    ILRS_Settings               _settings;
     IPlayerManager                _PlayerManager;
     uint                          _curMaxId;
     mapping(address => uint)      _AddrToId;
-    mapping(uint => THQBY_PLayer) _IdToPlayer;
+    mapping(uint => LRS_PLayer) _IdToPlayer;
     mapping(uint => address)      _IdToAddr;
     mapping(uint => bool)         _isBid;      //map<id, bidOrNot>
     address[]                     _addressSet;
@@ -2258,30 +2270,30 @@ contract Main //is ITHQBYPlayerInterface
     {
         IDependencyInjection _inject = new DependencyInjection();
         _settings = _inject.SettingsFactory();
-        _sceneManager = THQBY_SceneManager(_inject.SceneManagerFactory());
-        _roleBidder = THQBYRoleBidder(_inject.RoleBidderFactory());
+        _sceneManager = LRS_SceneManager(_inject.SceneManagerFactory());
+        _roleBidder = LRSRoleBidder(_inject.RoleBidderFactory());
         _PlayerManager = _inject.PlayerManager();
         _roleBidder.Initialize();
     }
 
     //starting game
-    function Bid(uint policeAmount, uint killerAmount, uint citizenAmount) public payable
+    function Bid(uint ProphetAmount, uint WolfAmount, uint citizenAmount) public payable
     {
-        uint sum= policeAmount+killerAmount+citizenAmount;
+        uint sum= ProphetAmount+WolfAmount+citizenAmount;
         uint coins= msg.value;
         uint invSum=uint(coins/sum);
         
        
         
-        policeAmount*=invSum;
-        killerAmount*=invSum;
+        ProphetAmount*=invSum;
+        WolfAmount*=invSum;
         citizenAmount*=invSum;
         
         
         
         uint id = getMyID();
-        _roleBidder.Bid(id, _settings.POLICE(), policeAmount);
-        _roleBidder.Bid(id, _settings.KILLER(), killerAmount);
+        _roleBidder.Bid(id, _settings.Prophet(), ProphetAmount);
+        _roleBidder.Bid(id, _settings.Wolf(), WolfAmount);
         _roleBidder.Bid(id, _settings.CITIZEN(), citizenAmount);
         //update structure
         _isBid[id] = true;
@@ -2300,7 +2312,7 @@ contract Main //is ITHQBYPlayerInterface
         return id;
     }
 
-    function GetMyPlayer() public returns(THQBY_PLayer ){
+    function GetMyPlayer() public returns(LRS_PLayer ){
         checkIsBid();
         return Id2Player(getMyID());
     }   
@@ -2314,7 +2326,7 @@ contract Main //is ITHQBYPlayerInterface
     function getRole() public returns(string memory)
     {
         checkIsBid();
-        THQBY_PLayer Player = GetMyPlayer();
+        LRS_PLayer Player = GetMyPlayer();
         return Player.GetRole();
     }
 
@@ -2322,7 +2334,7 @@ contract Main //is ITHQBYPlayerInterface
     function TryChat(string memory message) public returns(bool)
     {
         checkIsBid();
-        THQBY_PLayer _Player = GetMyPlayer();
+        LRS_PLayer _Player = GetMyPlayer();
         return _sceneManager.GetCurrentScene().Chatter().TryChat(_Player, message);
     }
 
@@ -2339,9 +2351,9 @@ contract Main //is ITHQBYPlayerInterface
             _roleBidder.SetID2Address(id,_IdToAddr[id]);
         }
         
-        _tHQBY_PLayers = _roleBidder.CreateRoles();
+        _LRS_PLayers = _roleBidder.CreateRoles();
         _sceneManager.Initialize();
-        _PlayerManager.Initialize(_tHQBY_PLayers);
+        _PlayerManager.Initialize(_LRS_PLayers);
         return true;
     }
 
@@ -2349,7 +2361,7 @@ contract Main //is ITHQBYPlayerInterface
     function TryEndChat() public returns(bool)
     {
         checkIsBid();
-        THQBY_PLayer Player = GetMyPlayer();
+        LRS_PLayer Player = GetMyPlayer();
         IScene scene = _sceneManager.GetCurrentScene();
         IChatter chatter = scene.Chatter();
         return chatter.TryMoveForward(Player);
@@ -2358,7 +2370,7 @@ contract Main //is ITHQBYPlayerInterface
     function TryForwardScene() public
     {
         checkIsBid();
-        THQBY_PLayer Player = GetMyPlayer();
+        LRS_PLayer Player = GetMyPlayer();
         _sceneManager.TryMoveForward(Player);
     }
 
@@ -2366,7 +2378,7 @@ contract Main //is ITHQBYPlayerInterface
     {
         checkIsBid();
         IPlayer toWhoPlayer = Id2Player(playerID);
-        THQBY_PLayer Player = GetMyPlayer();
+        LRS_PLayer Player = GetMyPlayer();
         return _sceneManager.GetCurrentScene().Ballot().TryVote(Player, toWhoPlayer);
     }
 
@@ -2411,12 +2423,12 @@ contract Main //is ITHQBYPlayerInterface
         return Id2Player(id);
     }
 
-    function Id2Player(uint id) private returns(THQBY_PLayer)
+    function Id2Player(uint id) private returns(LRS_PLayer)
     {
         checkIsBid();
         if (address(_IdToPlayer[id])==0x0)
         {
-            _IdToPlayer[id] = THQBY_PLayer(_tHQBY_PLayers[id]);
+            _IdToPlayer[id] = LRS_PLayer(_LRS_PLayers[id]);
         }
         return _IdToPlayer[id];
     }
