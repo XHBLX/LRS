@@ -3,56 +3,13 @@
 
 player manager needs get phropet, witch, hunter, 
 
-change player num
 
-main needs to expose players own IPlayer, user casts it to their own role
 
 scene needs to handle wolfs kill upon witch's protection; and check if witch wants to kill
 
-contract Witch is LRS_PLayer
-{
-    constructor() public
-    {
-        //1231231231231231231231231231rwegwegqewrcqwefqvrc
-    }
 
-    
-    bool public poisoned=false;
-    bool public saved=false;
-    
-    bool public willPoison=false;
-    bool public willSave=false;
-    uint public whoPoison;
-    uint public whoSave;
-    
-    function PoisonSomebody(uint id) public
-    {
-        willPoison=true;
-        whoPoison=id;
-    }
-    
-    function SaveSomebody(uint id) public
-    {
-        willSave=true;
-        whoSave=id;
-    }
-    
-    function SetPoisoned_DONT_CALL_THIS_YOURSELF() public
-    {
-        poisoned=true;
-        willPoison=false;
-    }
-    
-    
-    function SetSaved_DONT_CALL_THIS_YOURSELF() public
-    {
-        saved=true;
-        willSave=false;
-    }
-}
+factory
 
-
-hunter inject PlayerManager
 
 
 */
@@ -291,6 +248,8 @@ contract ILRS_Settings
     function  Prophet() public  returns(string memory);
     function  CITIZEN() public  returns(string memory);
     function  Wolf() public  returns(string memory);
+     function Witch() public returns(string memory );
+     function Hunter() public returns(string memory );
 }
 
 
@@ -785,87 +744,6 @@ IPlayer[] players;
         return players;
     }
 }
-
-
-contract LRSRoleBidder is RoleBidderBase
-{
-    ILRS_Settings _settings;
-    StrArr       stra;
-
-    constructor(ILRS_Settings settings, IPlayerFactory PlayerFactory)  RoleBidderBase(PlayerFactory)   public
-    {
-//      _playerFactory = PlayerFactory;
-        _settings = settings;
-        stra=new StrArr();
-    }
-
-    function InitRoles() internal 
-    {
-        stra.PushStr(_settings.Prophet());
-        stra.PushStr(_settings.CITIZEN());
-        stra.PushStr(_settings.Wolf());
-    
-        Initialize(stra);
-        SetPlayersCount(12);
-    }
-
-    function SetSpotsOfRoles() internal
-    {   
-        _spotsOfRole[_settings.Prophet()]= 4;
-        _spotsOfRole[_settings.CITIZEN()] =4;
-        _spotsOfRole[_settings.Wolf()] =4;
-    }
-    
-    function Initialize() public
-    {
-        SetSpotsOfRoles();
-        InitRoles();
-    }
-}
-
-
-contract LRS_PLayer is Player
-{
-    constructor(ILRS_Settings settings, address addresss) Player(addresss) public
-    {
-    }
-    
-   
-}
-
-
-contract Prophet is LRS_PLayer
-{
-    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
-    {
-        // base(settings) from LRS_PLayer
-        _role = settings.Prophet();
-    }
-}
-
-
-contract Wolf is LRS_PLayer
-{
-    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
-    {
-        // base(settings) from LRS_PLayer
-        _role = settings.Wolf();
-    }
-}
-
-
-contract Citizen is LRS_PLayer
-{
-    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
-    {
-        // base(settings) from LRS_PLayer
-        _role = settings.CITIZEN();
-    }
-}
-
-
-
-
 
 
 
@@ -2296,8 +2174,167 @@ contract LRS_SceneManager is SceneManagerBase
 }
 
 
+contract LRSRoleBidder is RoleBidderBase
+{
+    ILRS_Settings _settings;
+    StrArr       stra;
+
+    constructor(ILRS_Settings settings, IPlayerFactory PlayerFactory)  RoleBidderBase(PlayerFactory)   public
+    {
+//      _playerFactory = PlayerFactory;
+        _settings = settings;
+        stra=new StrArr();
+    }
+
+    function InitRoles() internal 
+    {
+        stra.PushStr(_settings.Prophet());
+        stra.PushStr(_settings.CITIZEN());
+        stra.PushStr(_settings.Wolf());
+    
+        Initialize(stra);
+        SetPlayersCount(9);
+    }
+
+    function SetSpotsOfRoles() internal
+    {   
+        _spotsOfRole[_settings.Prophet()]= 1;
+        _spotsOfRole[_settings.Witch()]= 1;
+        _spotsOfRole[_settings.Hunter()]= 1;
+        _spotsOfRole[_settings.CITIZEN()] =3;
+        _spotsOfRole[_settings.Wolf()] =3;
+    }
+    
+    function Initialize() public
+    {
+        SetSpotsOfRoles();
+        InitRoles();
+    }
+}
 
 
+contract LRS_PLayer is Player
+{
+    constructor(ILRS_Settings settings, address addresss) Player(addresss) public
+    {
+    }
+    
+   
+}
+
+
+contract Prophet is LRS_PLayer
+{
+    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
+    {
+        // base(settings) from LRS_PLayer
+        _role = settings.Prophet();
+    }
+}
+
+
+contract Wolf is LRS_PLayer
+{
+    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
+    {
+        // base(settings) from LRS_PLayer
+        _role = settings.Wolf();
+    }
+}
+
+
+contract Citizen is LRS_PLayer
+{
+    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
+    {
+        // base(settings) from LRS_PLayer
+        _role = settings.CITIZEN();
+    }
+}
+
+
+
+
+
+
+
+contract Witch is LRS_PLayer
+{
+    constructor(ILRS_Settings settings, address addresss) LRS_PLayer(settings,addresss) public
+    {
+        _role = settings.Witch();
+    }
+
+    
+    bool public poisoned=false;
+    bool public saved=false;
+    
+    bool public willPoison=false;
+    bool public willSave=false;
+    uint public whoPoison;
+
+    
+    function PoisonSomebody(uint id) public
+    {
+        willPoison=true;
+        whoPoison=id;
+    }
+    
+    function SetWillSave(bool boool) public
+    {
+        willSave=boool;
+    }
+    
+    function SetPoisoned_DONT_CALL_THIS_YOURSELF() public
+    {
+        poisoned=true;
+        willPoison=false;
+    }
+    
+    
+    function SetSaved_DONT_CALL_THIS_YOURSELF() public
+    {
+        saved=true;
+        willSave=false;
+    }
+}
+
+
+contract Hunter is LRS_PLayer
+{
+    bool  _willKill=false;
+    uint  _whoToKill;
+    LRS_PlayerManager _playerManager;
+    
+    constructor (LRS_PlayerManager playerManager,ILRS_Settings settings, address addresss)LRS_PLayer(settings,addresss) public
+    {
+        _playerManager=playerManager;
+        _role = settings.Hunter();
+    }
+    
+    
+    
+    function SetWhoToKill(uint id) public
+    {
+        _willKill=true;
+        _whoToKill=id;
+    }
+    
+    
+    function KillMe() public
+    {
+        if (!_isAlive)
+        {
+            revert("already dead");
+        }
+        _isAlive=false;
+        
+        if(_willKill)
+        {
+            _playerManager.GetPlayer(_whoToKill).KillMe();
+        }
+    }
+}
 
 
 /////////////////////// Main Function To Be ReModeled ////////////////////
