@@ -1921,7 +1921,8 @@ function InitSceneHelper() private
         if (address(_playerfact) == address(0x0))
         {
             ILRS_Settings settings = SettingsFactory();
-            _playerfact = new LRS_PlayerFactory(settings);
+            ILRS_PlayerManager manager = PlayerManager();
+            _playerfact = new LRS_PlayerFactory( settings, manager);
         }
         return _playerfact;
     }
@@ -2083,11 +2084,13 @@ function InitSceneHelper() private
 contract LRS_PlayerFactory is PlayerFactoryBase
 {
     ILRS_Settings _settings;
+    ILRS_PlayerManager _playerManager;
 
     //mannually DI
-    constructor(ILRS_Settings settings)   PlayerFactoryBase() public
+    constructor(ILRS_Settings settings, ILRS_PlayerManager playerManager)   PlayerFactoryBase() public
     {
         _settings = settings;
+        _playerManager=playerManager;
     }
 
     function Create(string memory role, address addrs) public returns(IPlayer)
@@ -2105,6 +2108,15 @@ contract LRS_PlayerFactory is PlayerFactoryBase
         {
             ans = new Prophet(_settings,addrs);
         }
+        else if ( keccak256(role) ==  keccak256(_settings.Witch()))
+        {
+            ans = new Witch(_settings,addrs);
+        }
+        else if ( keccak256(role) ==  keccak256(_settings.Hunter()))
+        {
+            ans = new Hunter(_playerManager,_settings,addrs);
+        }
+        
         else {
             revert("no such role");
         }
@@ -2172,7 +2184,7 @@ contract LRS_SceneManager is SceneManagerBase
         sceneDay.Initialize(this, playerManager.GetAllPlayers());
         scenePK.Initialize(this, playerManager.GetAllPlayers());
         sceneNIGHT_Wolf.Initialize(this, playerManager.GetLivingWolfPlayers());
-        sceneNIGHT_Prophet.Initialize(this, playerManager.GetLivingProphetPlayers());
+        sceneNIGHT_Prophet.Initialize(this, playerManager.GetLivingProphet());
     }
 
     function Initialize() public 
@@ -2313,9 +2325,9 @@ contract Hunter is LRS_PLayer
 {
     bool  _willKill=false;
     uint  _whoToKill;
-    LRS_PlayerManager _playerManager;
+    ILRS_PlayerManager _playerManager;
     
-    constructor (LRS_PlayerManager playerManager,ILRS_Settings settings, address addresss)LRS_PLayer(settings,addresss) public
+    constructor (ILRS_PlayerManager playerManager,ILRS_Settings settings, address addresss)LRS_PLayer(settings,addresss) public
     {
         _playerManager=playerManager;
         _role = settings.Hunter();
