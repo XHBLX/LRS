@@ -1,5 +1,60 @@
 /*
 * OOP implementation of LRS in Solidity
+
+player manager needs get phropet, witch, hunter, 
+
+change player num
+
+main needs to expose players own IPlayer, user casts it to their own role
+
+scene needs to handle wolfs kill upon witch's protection; and check if witch wants to kill
+
+contract Witch is LRS_PLayer
+{
+    constructor() public
+    {
+        //1231231231231231231231231231rwegwegqewrcqwefqvrc
+    }
+
+    
+    bool public poisoned=false;
+    bool public saved=false;
+    
+    bool public willPoison=false;
+    bool public willSave=false;
+    uint public whoPoison;
+    uint public whoSave;
+    
+    function PoisonSomebody(uint id) public
+    {
+        willPoison=true;
+        whoPoison=id;
+    }
+    
+    function SaveSomebody(uint id) public
+    {
+        willSave=true;
+        whoSave=id;
+    }
+    
+    function SetPoisoned_DONT_CALL_THIS_YOURSELF() public
+    {
+        poisoned=true;
+        willPoison=false;
+    }
+    
+    
+    function SetSaved_DONT_CALL_THIS_YOURSELF() public
+    {
+        saved=true;
+        willSave=false;
+    }
+}
+
+
+hunter inject PlayerManager
+
+
 */
 pragma solidity ^0.4.25;
 //pragma experimental ABIEncoderV2;
