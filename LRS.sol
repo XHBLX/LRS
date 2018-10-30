@@ -2,10 +2,6 @@
 * OOP implementation of LRS in Solidity
 
 
-scene needs to handle wolfs kill upon witch's protection; and check if witch wants to kill
-
-
-
 
 
 */
@@ -139,7 +135,7 @@ contract IPlayer //is ISpokenEvent
     function GetVotingWeightAsPercent() public returns(uint);
     function GetRole() public returns(string memory);
     function GetId() public returns(uint);
-    function SetId(uint id) internal ;
+    function SetId(uint id) public ;
     function GetIsAlive() public returns(bool);
     function KillMe() public ;
     //function  Speak(string message) public ;
@@ -531,9 +527,9 @@ contract RoleBidderBase is IRoleBidder
         }
         _isClassActive = false;
         
-        for (uint i=0; i<res.length; i++)
+        for (uint ii=0; ii<res.length; ii++)
     {
-        res[i].SetId(i);
+        res[ii].SetId(ii);
     }
         
         
@@ -631,7 +627,7 @@ contract Player is IPlayer
     }
 
 
-    function SetId(uint id) internal
+    function SetId(uint id) public
     {
         _id = id;
     }
@@ -1393,7 +1389,10 @@ contract SceneDAY_PK is LRS_Scene
 
 contract SceneNIGHT_Wolf is LRS_Scene
 {
-    constructor (IBallot ballot
+    ILRS_PlayerManager _playerManager;
+    
+    constructor (ILRS_PlayerManager playerManager
+        , IBallot ballot
         , IChatter chatter
         , ITimeLimitable timeLimitable
         , ILRS_Settings settings) LRS_Scene(ballot, chatter, timeLimitable, settings)
@@ -1403,18 +1402,52 @@ contract SceneNIGHT_Wolf is LRS_Scene
 //      _chatter = chatter;
 //      _timeLimitable = timeLimitable;
 //      _settings = settings;
+_playerManager=playerManager;
 _sceneName=_settings.NIGHT_Wolf();
     }
 
     function MoreVotingResultHandler(IPlayer[] memory result) public
     {
         GotoWolfScene();
+        
     }
 
+IPlayer[] witches;
     function OneVotingResultHandler(IPlayer result) public
     {
-        KillSomebody(result);
-        _sceneDay.KillSomebody(result);
+        witches= _playerManager.GetLivingWitch();
+        if (witches.length==0) //witch died
+        {
+            KillSomebody(result);
+            _sceneDay.KillSomebody(result);
+        }
+        else if (witches.length==1) //exits witch
+        {
+            Witch witch =Witch(witches[0]);
+            if(!witch.willSave()) //witch not saves
+            {
+                KillSomebody(result);
+                _sceneDay.KillSomebody(result);
+                
+                
+                
+            }
+            else //witch will save
+            {
+                witch.SetSaved_DONT_CALL_THIS_YOURSELF();
+            }
+            
+            
+            if (witch.willPoison()) // witch will kill
+            {
+                    IPlayer victum=_playerManager.GetPlayer(witch.whoPoison());
+                    KillSomebody(victum);
+                    _sceneDay.KillSomebody(victum);
+                    witch.SetPoisoned_DONT_CALL_THIS_YOURSELF();
+            }
+        }
+        
+        
         GotoWolfScene();
     }
 
@@ -1828,11 +1861,12 @@ function InitSceneHelper() private
 
     constructor() public
     {
+        ILRS_PlayerManager playerManager = PlayerManager();
             IBallot ballot = BallotFactory();
             IChatter chatter = ChatterFactory();
             ITimeLimitable timeLimitable = TimeLimitableFactory();
             ILRS_Settings settings = SettingsFactory();
-            _sceneNIGHT_Wolf = new SceneNIGHT_Wolf(ballot, chatter, timeLimitable, settings);
+            _sceneNIGHT_Wolf = new SceneNIGHT_Wolf(playerManager, ballot, chatter, timeLimitable, settings);
                _sceneNIGHT_Prophet = new SceneNIGHT_Prophet(ballot, chatter, timeLimitable, settings);
                _sceneDAY = new SceneDAY(ballot, chatter, timeLimitable, settings);
             _sceneDAY_PK = new SceneDAY_PK(ballot, chatter, timeLimitable, settings);
