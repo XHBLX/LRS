@@ -5,7 +5,6 @@
 scene needs to handle wolfs kill upon witch's protection; and check if witch wants to kill
 
 
-factory
 
 
 
@@ -2390,9 +2389,9 @@ contract Main //is ILRSPlayerInterface
     }
 
     //starting game
-    function Bid(uint ProphetAmount, uint WolfAmount, uint citizenAmount) public payable
+    function Bid(uint ProphetAmount, uint WolfAmount, uint citizenAmount, uint WitchAmount, uint HunterAmount) public payable
     {
-        uint sum= ProphetAmount+WolfAmount+citizenAmount;
+        uint sum= ProphetAmount+WolfAmount+citizenAmount+WitchAmount+HunterAmount;
         uint coins= msg.value;
         uint invSum=uint(coins/sum);
         
@@ -2401,6 +2400,8 @@ contract Main //is ILRSPlayerInterface
         ProphetAmount*=invSum;
         WolfAmount*=invSum;
         citizenAmount*=invSum;
+        WitchAmount*=invSum;
+        HunterAmount*=invSum;
         
         
         
@@ -2408,6 +2409,8 @@ contract Main //is ILRSPlayerInterface
         _roleBidder.Bid(id, _settings.Prophet(), ProphetAmount);
         _roleBidder.Bid(id, _settings.Wolf(), WolfAmount);
         _roleBidder.Bid(id, _settings.CITIZEN(), citizenAmount);
+        _roleBidder.Bid(id, _settings.Witch(), WitchAmount);
+        _roleBidder.Bid(id, _settings.Hunter(), HunterAmount);
         //update structure
         _isBid[id] = true;
     }
