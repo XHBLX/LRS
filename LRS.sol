@@ -1,9 +1,6 @@
 /*
 * OOP implementation of LRS in Solidity
 
-player manager needs get phropet, witch, hunter, 
-
-
 
 scene needs to handle wolfs kill upon witch's protection; and check if witch wants to kill
 
@@ -233,7 +230,9 @@ contract ILRSPlayerInterface
 
 contract ILRS_PlayerManager is IPlayerManager
 {
-    function GetLivingProphetPlayers() public returns(IPlayer[] memory);
+    function GetLivingProphet() public returns(IPlayer[] memory);
+    function GetLivingWitch() public returns(IPlayer[] memory);
+    function GetLivingHunter() public returns(IPlayer[] memory);
     function GetLivingCitizenPlayers() public returns(IPlayer[] memory);
     function GetLivingWolfPlayers() public returns(IPlayer[] memory);
 }
@@ -714,11 +713,10 @@ contract PlayerManager is IPlayerManager
     }
     
 IPlayer[] players;
-    function FindByRole(string memory desiredRoleName) internal returns(IPlayer[] memory)
+    function FindByRole(string memory desiredRoleName, bool mustBeAlive) internal returns(IPlayer[] memory)
     {
         
         IPlayer[] memory all     = GetAllPlayers();
-        bool mustBeAlive       = true; // Initialized as that in original file
         for (uint i = 0; i < all.length; i++)
         {
             IPlayer x = all[i];
@@ -2131,18 +2129,29 @@ contract LRS_PlayerManager is PlayerManager, ILRS_PlayerManager
 
     function GetLivingCitizenPlayers() public returns (IPlayer[] memory )
     {
-        return FindByRole(_names.CITIZEN());
+        return FindByRole(_names.CITIZEN(),true);
     }
 
     function GetLivingWolfPlayers() public returns (IPlayer[] memory )
     {
-        return FindByRole(_names.Wolf());
+        return FindByRole(_names.Wolf(),true);
     }
 
-    function GetLivingProphetPlayers() public returns (IPlayer[] memory )
+
+    
+    function GetLivingProphet() public returns(IPlayer[] memory)
     {
-        return FindByRole(_names.Prophet());
-    }   
+        return FindByRole(_names.Prophet(),true);
+    }
+    function GetLivingWitch() public returns(IPlayer[] memory)
+    {
+        return FindByRole(_names.Witch(),true);
+    }
+    function GetLivingHunter() public returns(IPlayer[] memory)
+    {
+        return FindByRole(_names.Hunter(),true);
+    }
+  
 
 }
 
